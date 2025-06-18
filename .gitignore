@@ -1,0 +1,18 @@
+# Ignore Node modules and environment config
+node_modules/
+.env
+*.log
+dispatcher_backend.zip
+
+# OS-specific junk files
+.DS_Store
+Thumbs.db
+
+# Backup/archive files
+*.zip
+*.tar.gz
+*.tgz
+
+# Optional: Ignore uploads/temp directories if you create them later
+uploads/
+tmp/
