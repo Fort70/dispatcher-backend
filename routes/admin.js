@@ -188,11 +188,7 @@ router.post('/reset-password', authenticateToken, adminOnly, async (req, res) =>
     res.json({ message: 'Password reset successfully.' });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
-
   }
 });
 
-
 module.exports = router;
-
-

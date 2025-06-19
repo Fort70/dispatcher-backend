@@ -1,3 +1,6 @@
+const NODE_ENV = process.env.NODE_ENV || "development";
+
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -73,10 +76,18 @@ app.post('/webhook/payment', async (req, res) => {
   }
 });
 
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send("🚫 Something broke!");
+});
+
+
 const PORT = process.env.PORT || 5000;
 console.log("✅ ENV PORT =", process.env.PORT);
 
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+
+
 
 
 
