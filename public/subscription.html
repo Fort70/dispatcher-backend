@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SpecLode Subscription</title>
+  <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Rancho&family=Protest+Revolution&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #111;
+      background-image: url('https://www.transparenttextures.com/patterns/brushed-alum.png');
+      background-repeat: repeat;
+      background-attachment: fixed;
+      color: #76f309;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .logo {
+      width: 850px;
+      max-width: 90vw;
+      display: block;
+      margin: 32px auto 8px;
+    }
+    .title {
+      font-family: 'Protest Revolution', cursive;
+      font-size: 100px;
+      color: #00e6ff;
+      text-shadow: 2px 2px 8px #000;
+      text-align: center;
+      margin: 0;
+    }
+    .slogan {
+      font-family: 'Rancho', cursive;
+      font-size: 28px;
+      color: #76f309;
+      text-shadow: 1px 1px 4px #000;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .plans-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 32px;
+      margin-top: 25px;
+      margin-bottom: 30px;
+    }
+    .plan {
+      background: rgba(0,0,0,0.75);
+      border-radius: 12px;
+      padding: 32px 24px 24px 24px;
+      min-width: 260px;
+      max-width: 330px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .plan-title {
+      font-size: 2.6em;
+      color: #00e6ff;
+      font-family: 'Protest Revolution', cursive;
+      margin-bottom: 8px;
+    }
+    .plan-price {
+      font-size: 2.2em;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+    .plan-desc {
+      font-size: 1.05em;
+      color: #ffffff;
+      margin-bottom: 22px;
+      text-align: center;
+    }
+    .plan button {
+      background: #00e6ff;
+      color: #000;
+      border: none;
+      border-radius: 7px;
+      padding: 13px 0;
+      width: 100%;
+      font-size: 1.09em;
+      font-weight: 600;
+      margin-top: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .plan button:hover {
+      background: #00bcd4;
+    }
+    .note {
+      color: #76f309;
+      text-align: center;
+      font-size: 1em;
+      margin: 0 20px 18px 20px;
+    }
+    .back-link {
+      display: block;
+      color: #76f309;
+      text-align: center;
+      text-decoration: underline;
+      margin: 14px 0 36px 0;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    @media (max-width: 900px) {
+      .plans-container {
+        flex-direction: column;
+        align-items: center;
+      }
+      .logo {
+        width: 80vw;
+      }
+      .plan {
+        width: 92vw;
+        min-width: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <img src="./images/speclode-car-logo.png" alt="SpecLode Car Logo" class="logo"/>
+  <div class="title">SpecLode</div>
+  <div class="slogan">Load Smart. Drive Legal. Powered by SPECLODE!</div>
+  <h2 style="text-align:center;">Choose Your Subscription Plan</h2>
+  <div class="note">
+    7 Day Free Trial – No charge today.<br>
+    Select your plan and enter payment info to start.<br>
+    Cancel anytime during your free trial.
+  </div>
+  <div class="plans-container">
+    <div class="plan">
+      <div class="plan-title">Starter</div>
+      <div class="plan-price">$19.99<span style="font-size:0.6em;font-weight:400;">/month</span></div>
+      <div class="plan-desc">1 Power Unit & Trailer Combo<br>Essential for solo operators.</div>
+      <button onclick="selectPlan('starter')">Start 7 Day Free Trial</button>
+    </div>
+    <div class="plan">
+      <div class="plan-title">Pro</div>
+      <div class="plan-price">$49.99<span style="font-size:0.6em;font-weight:400;">/month</span></div>
+      <div class="plan-desc">Up to 3 Power Unit Combos<br>Perfect for small fleets.</div>
+      <button onclick="selectPlan('pro')">Start 7 Day Free Trial</button>
+    </div>
+    <div class="plan">
+      <div class="plan-title">Elite</div>
+      <div class="plan-price">$79.99<span style="font-size:0.6em;font-weight:400;">/month</span></div>
+      <div class="plan-desc">Up to 5 Power Unit Combos<br>Advanced dispatchers & businesses.</div>
+      <button onclick="selectPlan('elite')">Start 7 Day Free Trial</button>
+    </div>
+  </div>
+  <a class="back-link" href="login.html">Back to Login</a>
+  <script>
+ function selectPlan(plan) {
+  sessionStorage.setItem("selectedPlan", plan); // <-- Set for use in payment.html
+  window.location.href = "payment.html";
+}
+
+      // This is where you'll redirect or show the payment/billing form for the selected plan.
+      // For now, we'll just alert and log the plan selected.
+      // Replace this with a redirect when you make your billing/payment page!
+      
+
+
+      // window.location.href = "payment.html?plan=" + encodeURIComponent(plan);
+    
+  </script>
+</body>
+</html>
