@@ -1,4 +1,0 @@
-use('testdb');
-
-db.dropDatabase();
-

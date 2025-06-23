@@ -1,11 +1,10 @@
-// config/middleware/authMiddleware.js
-
+// ✅ JWT and Admin API Key Authentication Middleware
 const jwt = require('jsonwebtoken');
 
-module.exports = function authenticateToken(req, res, next) {
+// ✅ JWT Authentication Middleware
+function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
-
-  // Expect format: "Bearer <token>"
+  
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
@@ -22,14 +21,44 @@ module.exports = function authenticateToken(req, res, next) {
   try {
     const decoded = jwt.verify(token, secret);
 
-    // Attach user info to the request
-    req.user = decoded;
 
-    next(); // Proceed
+    req.user = decoded;
+    next();
   } catch (err) {
     console.warn('[AuthMiddleware] ❌ Invalid or expired token:', err.message);
     return res.status(403).json({ message: 'Invalid or expired token.' });
   }
+}
+
+// ✅ Admin API Key Middleware (with trim fix and debug logging)
+function verifyAdminApiKey(req, res, next) {
+  const providedKey = req.headers['x-api-key']?.trim();
+  const expectedKey = process.env.ADMIN_API_KEY?.trim();
+
+  console.log("🔍 Incoming x-api-key:", providedKey);
+  console.log("🔐 Expected ADMIN_API_KEY:", expectedKey);
+  console.log("🔍 Incoming x-api-key:", providedKey);
+  console.log("🔐 Expected ADMIN_API_KEY:", expectedKey);
+  console.log("🧪 Provided Key: [", providedKey, "] length:", providedKey?.length);
+  console.log("🧪 Expected Key: [", expectedKey, "] length:", expectedKey?.length);
+  
+
+  if (!providedKey || providedKey !== expectedKey) {
+    console.warn('[AuthMiddleware] ❌ Invalid API Key');
+    return res.status(403).json({ message: 'Forbidden: Invalid API Key' });
+  }
+
+  next();
+}
+
+
+
+// ✅ Export both middlewares
+module.exports = {
+  authenticateToken,
+  verifyAdminApiKey
 };
+
+
 
 

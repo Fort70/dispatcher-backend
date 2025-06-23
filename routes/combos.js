@@ -1,26 +1,20 @@
- const path = require('path');
-console.log('LOOKING FOR:', path.resolve(__dirname, '../middleware/authMiddleware.js'));
-console.log('FILE EXISTS:', require('fs').existsSync(path.resolve(__dirname, '../middleware/authMiddleware.js')));
- 
- const express = require("express");
+const express = require("express");
 const router = express.Router();
 const Combo = require("../models/combo");
-const authenticateToken = require("../middleware/authMiddleware");
-console.log('✅ Loaded authMiddleware:', typeof authenticateToken);
+const { authenticateToken } = require("../middleware/authMiddleware");
 
-
-// GET /api/combos - Get all combos for the logged-in user
+// ✅ GET /api/combos - Get all combos for the logged-in user
 router.get("/", authenticateToken, async (req, res) => {
   try {
     const combos = await Combo.find({ userId: req.user.userId });
     res.json(combos);
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error loading combos:", err);
     res.status(500).json({ message: "Failed to load combos" });
   }
 });
 
-// POST /api/combos - Save or update a combo for a user
+// ✅ POST /api/combos - Save or update a combo for a user
 router.post("/", authenticateToken, async (req, res) => {
   try {
     const { slot, powerUnitWeight, trailerWeight, powerUnitGVWR, trailerGVWR } = req.body;
@@ -51,12 +45,12 @@ router.post("/", authenticateToken, async (req, res) => {
       return res.status(201).json({ message: `Combo slot ${slot} created.` });
     }
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error saving combo:", err);
     res.status(500).json({ message: "Failed to save combo" });
   }
 });
 
-// PUT /api/combos/:id - Update a combo by its ID
+// ✅ PUT /api/combos/:id - Update a combo by its ID
 router.put("/:id", authenticateToken, async (req, res) => {
   try {
     const updated = await Combo.findOneAndUpdate(
@@ -67,12 +61,12 @@ router.put("/:id", authenticateToken, async (req, res) => {
     if (!updated) return res.status(404).json({ message: "Combo not found" });
     res.json(updated);
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error updating combo:", err);
     res.status(500).json({ message: "Failed to update combo" });
   }
 });
 
-// DELETE /api/combos/:id - Delete a combo by its ID
+// ✅ DELETE /api/combos/:id - Delete a combo by its ID
 router.delete("/:id", authenticateToken, async (req, res) => {
   try {
     const deleted = await Combo.findOneAndDelete({
@@ -82,9 +76,10 @@ router.delete("/:id", authenticateToken, async (req, res) => {
     if (!deleted) return res.status(404).json({ message: "Combo not found" });
     res.json({ message: "Combo deleted" });
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error deleting combo:", err);
     res.status(500).json({ message: "Failed to delete combo" });
   }
 });
 
 module.exports = router;
+
