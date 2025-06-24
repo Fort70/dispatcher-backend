@@ -179,23 +179,42 @@ app.post('/webhook/payment', bodyParser.raw({ type: 'application/json' }), async
 
   try {
     if (type === 'invoice.payment_failed') {
-      const email = data?.object?.customer_email;
+      const email = data.object?.customer_email;
       if (email) {
         const user = await User.findOne({ email });
         if (user) {
           user.status = 'locked';
           await user.save();
-          console.log("🔒 User locked due to failed payment:", email);
+          console.log('🔒 User locked due to failed payment:', email);
         }
       }
-    } else if (type === 'invoice.payment_succeeded') {
-      const email = data?.object?.customer_email;
+    }
+
+    else if (type === 'invoice.payment_succeeded') {
+      const email = data.object?.customer_email;
       if (email) {
         const user = await User.findOne({ email });
         if (user) {
           user.status = 'active';
           await user.save();
-          console.log("✅ User unlocked after successful payment:", email);
+          console.log('✅ User unlocked after successful payment:', email);
+        }
+      }
+    }
+
+    else if (type === 'checkout.session.completed') {
+      const session = data.object;
+      const email = session.customer_email;
+      const selectedPlan = session.metadata?.plan || 'starter';
+
+      if (email) {
+        const user = await User.findOne({ email });
+        if (user) {
+          user.userPlan = selectedPlan;
+          await user.save();
+          console.log(`💳 User plan upgraded to "${selectedPlan}" for email: ${email}`);
+        } else {
+          console.warn(`⚠️ No user found for email: ${email}`);
         }
       }
     }
@@ -207,11 +226,6 @@ app.post('/webhook/payment', bodyParser.raw({ type: 'application/json' }), async
   }
 });
 
-// ✅ Global error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send("🚫 Something broke!");
-});
 
 // ✅ Start server
 const PORT = process.env.PORT || 5000;

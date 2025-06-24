@@ -9,7 +9,7 @@ const User = require("../models/User");
 const { authenticateToken, verifyAdminApiKey } = require("../middleware/authMiddleware");
 const adminOnly = require("../middleware/adminOnly");
 const loginLimiter = require("../middleware/rateLimiter");
-const requireApiKey = require("../middleware/apiKeyMiddleware");
+
 
 // ✅ Admin Login (NO verifyAdminApiKey here — allow login to proceed with correct credentials)
 router.post("/login", loginLimiter, async (req, res) => {

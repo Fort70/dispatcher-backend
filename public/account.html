@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Account</title>
+  <link href="https://fonts.googleapis.com/css2?family=Protest+Revolution&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Protest Revolution', cursive;
+      background-color: #111;
+      background-image: url('https://www.transparenttextures.com/patterns/brushed-alum.png');
+      background-repeat: repeat;
+      background-attachment: fixed;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 30px;
+      zoom: 0.50;
+    }
+
+    h1 {
+      font-size: 140px;
+      color: cyan;
+      margin-bottom: 20px;
+    }
+
+    .account-box {
+      background: rgba(0, 0, 0, 0.88);
+      padding: 40px 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 20px cyan;
+      width: 90%;
+      max-width: 500px;
+      min-height: 520px;
+      text-align: center;
+    }
+
+    .account-info {
+      margin-bottom: 20px;
+      font-size: 22px;
+      line-height: 1.8;
+      color: lime;
+      font-weight: bold;
+      white-space: pre-line;
+      display: block;
+    }
+
+    input[type="password"],
+    input[type="tel"] {
+      width: 100%;
+      padding: 14px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background-color: #00e6ff;
+      color: #000;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 21px;
+      margin-bottom: 16px;
+    }
+
+    button:hover {
+      background-color: #00bcd4;
+    }
+
+    #updateMsg {
+      margin-top: 16px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .home-link {
+      margin-top: 25px;
+      font-size: 20px;
+      color: cyan;
+      text-decoration: none;
+    }
+
+    .home-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>My Account</h1>
+
+  <div class="account-box">
+    <div id="accountInfo" class="account-info"></div>
+
+    <form id="passwordForm">
+      <input type="password" id="newPassword" placeholder="New Password" required />
+      <button type="submit">Update Password</button>
+    </form>
+
+    <form id="phoneForm">
+      <input type="tel" id="phoneNumber" placeholder="New Phone Number" />
+      <button type="submit">Update Phone</button>
+    </form>
+
+    <div id="updateMsg"></div>
+  </div>
+
+  <a href="dispatcher.html" class="home-link">← Back to Home</a>
+
+  <script>
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "login.html";
+    }
+
+    function parseJwt(token) {
+      try {
+        return JSON.parse(atob(token.split('.')[1]));
+      } catch (e) {
+        return null;
+      }
+    }
+
+    const payload = parseJwt(token);
+    if (payload) {
+      const infoDiv = document.getElementById("accountInfo");
+      const joined = new Date(payload.iat * 1000).toLocaleDateString();
+      infoDiv.textContent =
+        `Email: ${payload.email}\nPlan: ${payload.userPlan || 'N/A'}\nStatus: ${payload.status || 'N/A'}\nJoined: ${joined}`;
+    } else {
+      window.location.href = "login.html";
+    }
+
+    document.getElementById("passwordForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const newPassword = document.getElementById("newPassword").value.trim();
+      if (!newPassword) return;
+
+      try {
+        const res = await fetch("/admin/reset-password", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ email: payload.email, newPassword })
+        });
+        const data = await res.json();
+        document.getElementById("updateMsg").textContent = res.ok ? "Password updated successfully." : data.message;
+        document.getElementById("updateMsg").style.color = res.ok ? "lime" : "red";
+      } catch (err) {
+        document.getElementById("updateMsg").textContent = "Server error.";
+        document.getElementById("updateMsg").style.color = "red";
+      }
+    });
+
+    document.getElementById("phoneForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const phoneNumber = document.getElementById("phoneNumber").value.trim();
+      if (!phoneNumber) return;
+
+      try {
+        const res = await fetch("/admin/update-phone", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ email: payload.email, phone: phoneNumber })
+        });
+        const data = await res.json();
+        document.getElementById("updateMsg").textContent = res.ok ? "Phone number updated." : data.message;
+        document.getElementById("updateMsg").style.color = res.ok ? "lime" : "red";
+      } catch (err) {
+        document.getElementById("updateMsg").textContent = "Server error.";
+        document.getElementById("updateMsg").style.color = "red";
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+
