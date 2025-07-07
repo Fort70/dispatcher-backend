@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SpecLode Login</title>
   <link href="https://fonts.googleapis.com/css2?family=Protest+Revolution&display=swap" rel="stylesheet">
-  <link rel="icon" href="favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="/styles.css">
 
 
@@ -25,7 +24,7 @@
       min-height: 100vh;
       padding-top: 5px;
       padding-bottom: 60px;
-      zoom: .50;
+      zoom: .70;
     }
 
     .logo {
@@ -129,12 +128,26 @@
   <button type="submit" id="loginButton">Login</button>
 </form>
 
+<button type="button" id="forgotPasswordBtn" class="upgrade-btn" style="background: #ff5722;">
+  Forgot Password?
+</button>
+
+
     <div class="toggle-link" id="toggleText">Don't have an account? Register</div>
-    <button id="freeTrialBtn" class="upgrade-btn">7 Day Free Trial</button>
+    <button type="button" id="freeTrialBtn" class="upgrade-btn">7 Day Free Trial</button>
+
     <div id="error-message"></div>
   </div>
 
   <script>
+
+    console.log("Login script loaded");
+
+
+  function sanitizeInput(str) {
+  return str.replace(/[<>'"/]/g, '');
+}
+  
   const authBtn = document.getElementById("loginButton");
   const toggleText = document.getElementById("toggleText");
   const emailInput = document.getElementById("email");
@@ -153,8 +166,8 @@
   });
 
   authBtn.addEventListener("click", async () => {
-    const email = emailInput.value.trim();
-    const password = passwordInput.value.trim();
+    const email = sanitizeInput(emailInput.value.trim());
+    const password = sanitizeInput(passwordInput.value.trim());
 
     errorDiv.textContent = "";
 
@@ -164,7 +177,8 @@
     }
 
     if (!isLogin) {
-      window.location.href = `subscription.html?email=${encodeURIComponent(email)}`;
+      window.location.href = "/subscription.html";
+
       return;
     }
 
@@ -198,12 +212,16 @@
     document.getElementById("loginButton").click();
   });
 
-  // Free Trial Button
-  document.getElementById("freeTrialBtn").addEventListener("click", () => {
-    window.location.href = "subscription.html";
-  });
-</script>
+  // Forgot Password link
+document.getElementById("forgotPasswordBtn").addEventListener("click", () => {
+  window.location.href = "/forgot.html";
+});
 
+ // Free Trial Button
+document.getElementById("freeTrialBtn").addEventListener("click", () => {
+    console.log("FreeTrialBtn clicked");
+    window.location.href = "/subscription.html";
+});
 
   </script>
 </body>

@@ -133,7 +133,7 @@ app.post(
 );
 
 // Static front-end fallbacks
-//app.get("/", (req, res) => res.redirect("/login.html"));
+app.get("/", (req, res) => res.redirect("/login.html"));
 app.get("/payment", (req, res) =>
   res.sendFile(path.join(__dirname, "public/payment.html"))
 );

@@ -6,7 +6,6 @@
   <title>My Account</title>
   <link href="https://fonts.googleapis.com/css2?family=Protest+Revolution&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css">
-
   <style>
     body {
       margin: 0;
@@ -19,15 +18,13 @@
       flex-direction: column;
       align-items: center;
       padding-top: 30px;
-      zoom: 0.50;
+      zoom: 0.70;
     }
-
     h1 {
       font-size: 140px;
       color: cyan;
       margin-bottom: 20px;
     }
-
     .account-box {
       background: rgba(0, 0, 0, 0.88);
       padding: 40px 30px;
@@ -35,10 +32,8 @@
       box-shadow: 0 0 20px cyan;
       width: 90%;
       max-width: 500px;
-      min-height: 520px;
       text-align: center;
     }
-
     .account-info {
       margin-bottom: 20px;
       font-size: 22px;
@@ -46,9 +41,24 @@
       color: lime;
       font-weight: bold;
       white-space: pre-line;
-      display: block;
+      text-align: left;
     }
-
+    .btn-upgrade {
+      display: block;
+      margin: 20px auto;
+      padding: 12px 20px;
+      background: gold;
+      color: #000;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 18px;
+      text-decoration: none;
+    }
+    .btn-upgrade:hover {
+      background: #ffc107;
+    }
     input[type="password"],
     input[type="tel"] {
       width: 100%;
@@ -59,7 +69,6 @@
       font-size: 16px;
       box-sizing: border-box;
     }
-
     button {
       width: 100%;
       padding: 14px;
@@ -72,24 +81,20 @@
       font-size: 21px;
       margin-bottom: 16px;
     }
-
     button:hover {
       background-color: #00bcd4;
     }
-
     #updateMsg {
       margin-top: 16px;
       font-size: 16px;
       font-weight: bold;
     }
-
     .home-link {
       margin-top: 25px;
       font-size: 20px;
       color: cyan;
       text-decoration: none;
     }
-
     .home-link:hover {
       text-decoration: underline;
     }
@@ -99,48 +104,60 @@
   <h1>My Account</h1>
 
   <div class="account-box">
-    <div id="accountInfo" class="account-info"></div>
+    <!-- 1) Account Overview -->
+    <div id="accountInfo" class="account-info">
+      Loading account info…
+    </div>
 
+    <!-- 2) Upgrade Plan -->
+    <a href="subscription.html" class="btn-upgrade">Upgrade Plan</a>
+
+    <!-- 3) Change Password -->
     <form id="passwordForm">
       <input type="password" id="newPassword" placeholder="New Password" required />
       <button type="submit">Update Password</button>
     </form>
 
+    <!-- 4) Update Phone -->
     <form id="phoneForm">
       <input type="tel" id="phoneNumber" placeholder="New Phone Number" />
       <button type="submit">Update Phone</button>
     </form>
 
+    <!-- 5) Feedback Message -->
     <div id="updateMsg"></div>
   </div>
 
   <a href="dispatcher.html" class="home-link">← Back to Home</a>
 
   <script>
+  document.addEventListener("DOMContentLoaded", async () => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      window.location.href = "login.html";
-    }
+    let user;
 
-    function parseJwt(token) {
-      try {
-        return JSON.parse(atob(token.split('.')[1]));
-      } catch (e) {
-        return null;
-      }
-    }
+    // Load current user info
+    try {
+      const res = await fetch("/api/user", {
+        method: "GET",
+        headers: { "Authorization": "Bearer " + token }
+      });
+      if (!res.ok) throw new Error("Unauthorized");
 
-    const payload = parseJwt(token);
-    if (payload) {
+      user = await res.json();
       const infoDiv = document.getElementById("accountInfo");
-      const joined = new Date(payload.iat * 1000).toLocaleDateString();
+      const joined = new Date(user.joined).toLocaleDateString();
       infoDiv.textContent =
-        `Email: ${payload.email}\nPlan: ${payload.userPlan || 'N/A'}\nStatus: ${payload.status || 'N/A'}\nJoined: ${joined}`;
-    } else {
-      window.location.href = "login.html";
+        `Email: ${user.email}\n` +
+        `Plan: ${user.userPlan}\n` +
+        `Status: ${user.status}\n` +
+        `Joined: ${joined}`;
+    } catch (err) {
+      console.error("Failed to load account info:", err);
+      document.getElementById("accountInfo").textContent = "Unable to load account details.";
     }
 
-    document.getElementById("passwordForm").addEventListener("submit", async function (e) {
+    // Password update handler
+    document.getElementById("passwordForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const newPassword = document.getElementById("newPassword").value.trim();
       if (!newPassword) return;
@@ -152,18 +169,21 @@
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`
           },
-          body: JSON.stringify({ email: payload.email, newPassword })
+          body: JSON.stringify({ email: user.email, newPassword })
         });
         const data = await res.json();
-        document.getElementById("updateMsg").textContent = res.ok ? "Password updated successfully." : data.message;
-        document.getElementById("updateMsg").style.color = res.ok ? "lime" : "red";
-      } catch (err) {
-        document.getElementById("updateMsg").textContent = "Server error.";
-        document.getElementById("updateMsg").style.color = "red";
+        const msgEl = document.getElementById("updateMsg");
+        msgEl.textContent = res.ok ? "Password updated successfully." : data.message;
+        msgEl.style.color = res.ok ? "lime" : "red";
+      } catch {
+        const msgEl = document.getElementById("updateMsg");
+        msgEl.textContent = "Server error.";
+        msgEl.style.color = "red";
       }
     });
 
-    document.getElementById("phoneForm").addEventListener("submit", async function (e) {
+    // Phone update handler
+    document.getElementById("phoneForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const phoneNumber = document.getElementById("phoneNumber").value.trim();
       if (!phoneNumber) return;
@@ -175,19 +195,20 @@
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`
           },
-          body: JSON.stringify({ email: payload.email, phone: phoneNumber })
+          body: JSON.stringify({ email: user.email, phone: phoneNumber })
         });
         const data = await res.json();
-        document.getElementById("updateMsg").textContent = res.ok ? "Phone number updated." : data.message;
-        document.getElementById("updateMsg").style.color = res.ok ? "lime" : "red";
-      } catch (err) {
-        document.getElementById("updateMsg").textContent = "Server error.";
-        document.getElementById("updateMsg").style.color = "red";
+        const msgEl = document.getElementById("updateMsg");
+        msgEl.textContent = res.ok ? "Phone number updated." : data.message;
+        msgEl.style.color = res.ok ? "lime" : "red";
+      } catch {
+        const msgEl = document.getElementById("updateMsg");
+        msgEl.textContent = "Server error.";
+        msgEl.style.color = "red";
       }
     });
+  });
   </script>
 </body>
 </html>
-
-
 

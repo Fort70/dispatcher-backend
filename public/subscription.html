@@ -15,6 +15,7 @@
       font-family: sans-serif;
       margin: 0;
       padding: 0;
+      zoom: 0.85;
     }
     .logo {
       width: 850px;
@@ -24,7 +25,7 @@
     }
     .title {
       font-family: 'Protest Revolution', cursive;
-      font-size: 100px;
+      font-size: 200px;
       color: #00e6ff;
       text-shadow: 2px 2px 8px #000;
       text-align: center;
@@ -122,7 +123,6 @@
   </style>
 </head>
 <body>
-  <img src="./images/speclode-car-logo.png" alt="SpecLode Car Logo" class="logo"/>
   <div class="title">SpecLode</div>
   <div class="slogan">Load Smart. Drive Legal. Powered by SPECLODE!</div>
   <h2 style="text-align:center;">Choose Your Subscription Plan</h2>
@@ -131,41 +131,90 @@
     Select your plan and enter payment info to start.<br>
     Cancel anytime during your free trial.
   </div>
+    <div id="currentPlan" style="font-size: 26px; color: lime; margin-bottom: 10px;"></div>
+    <div id="accountEmail" style="font-size: 22px; color: cyan; margin-bottom: 5px;"></div>
+    <div id="accountStatus" style="font-size: 22px; color: cyan;"></div>
+
   <div class="plans-container">
+    <div id="currentPlan" style="font-size: 28px; color: lime; margin-bottom: 20px;"></div>
     <div class="plan">
       <div class="plan-title">Starter</div>
       <div class="plan-price">$19.99<span style="font-size:0.6em;font-weight:400;">/month</span></div>
       <div class="plan-desc">1 Power Unit & Trailer Combo<br>Essential for solo operators.</div>
-      <button onclick="selectPlan('starter')">Start 7 Day Free Trial</button>
+      <button class="trial-btn" data-plan="starter">Start 7 Day Free Trial</button>
     </div>
     <div class="plan">
       <div class="plan-title">Pro</div>
       <div class="plan-price">$49.99<span style="font-size:0.6em;font-weight:400;">/month</span></div>
       <div class="plan-desc">Up to 3 Power Unit Combos<br>Perfect for small fleets.</div>
-      <button onclick="selectPlan('pro')">Start 7 Day Free Trial</button>
+      <button class="trial-btn" data-plan="pro">Start 7 Day Free Trial</button>
     </div>
     <div class="plan">
       <div class="plan-title">Elite</div>
       <div class="plan-price">$79.99<span style="font-size:0.6em;font-weight:400;">/month</span></div>
       <div class="plan-desc">Up to 5 Power Unit Combos<br>Advanced dispatchers & businesses.</div>
-      <button onclick="selectPlan('elite')">Start 7 Day Free Trial</button>
+      <button class="trial-btn" data-plan="elite">Start 7 Day Free Trial</button>
     </div>
+    <div style="text-align:center; margin-top:20px;">
+  <a href="#" id="cancelTrial" style="color:#76f309; text-decoration:underline;">
+    Cancel Free Trial
+  </a>
+</div>
+
   </div>
-  <a class="back-link" href="login.html">Back to Login</a>
+ 
+
+   <!-- …all your HTML above… -->
+
   <script>
- function selectPlan(plan) {
-  sessionStorage.setItem("selectedPlan", plan); // <-- Set for use in payment.html
-  window.location.href = "payment.html";
-}
+  document.addEventListener("DOMContentLoaded", () => {
+    // Load current user info
+    const token = localStorage.getItem("token");
+    fetch("/api/users", {
+      headers: { "Authorization": "Bearer " + token }
+    })
+    .then(res => {
+      if (!res.ok) throw new Error("Unauthorized");
+      return res.json();
+    })
+    .then(user => {
+      document.getElementById("currentPlan").textContent  = `Current Plan: ${user.userPlan}`;
+      document.getElementById("accountEmail").textContent  = `Email: ${user.email}`;
+      document.getElementById("accountStatus").textContent = `Status: ${user.status}`;
+    })
+    .catch(err => console.error("Failed to load user info:", err));
 
-      // This is where you'll redirect or show the payment/billing form for the selected plan.
-      // For now, we'll just alert and log the plan selected.
-      // Replace this with a redirect when you make your billing/payment page!
-      
+    // Wire up all the trial buttons
+    document.querySelectorAll(".trial-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const plan = btn.dataset.plan;
+        const token = localStorage.getItem("token");
+        try {
+          const res = await fetch("/api/combo/create-checkout-session", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify({ plan })
+          });
+          const { url } = await res.json();
+          window.location.href = url;
+        } catch (err) {
+          console.error("Checkout session error:", err);
+          alert("Could not start checkout. Please try again.");
+        }
+      });
+    });
 
-
-      // window.location.href = "payment.html?plan=" + encodeURIComponent(plan);
-    
+    // Stub Cancel Trial link
+    const cancelLink = document.getElementById("cancelTrial");
+    if (cancelLink) {
+      cancelLink.addEventListener("click", () => {
+        alert("Cancel trial flow coming soon!");
+      });
+    }
+  });
   </script>
 </body>
 </html>

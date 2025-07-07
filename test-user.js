@@ -1,28 +1,26 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 const User = require("./models/User");
 
-// Replace with your actual MongoDB connection string if different!
-const MONGO_URI = "mongodb://localhost:27017/testdb";
+const MONGO_URI = "mongodb://specuser2:StickFigureVFort70B05T09@127.0.0.1:27017/test?authSource=admin";
 
 async function run() {
-  await mongoose.connect(MONGO_URI);
+  //await mongoose.connect(MONGO_URI);
 
-  // Create a new user
+  const hashedPassword = await bcrypt.hash("Test123!", 10);
+
   const user = new User({
-    email: "test@example.com",
-    password: "somehashedpassword", // just for demo—normally this should be hashed!
+    email: "nitroflat@gmail.com",
+    password: hashedPassword,
     userPlan: "pro",
-    status: "active"
+    status: "active",
+    role: "admin"
   });
 
   await user.save();
-  console.log("✅ User saved:", user);
-
-  // Fetch the user and show fields
-  const found = await User.findOne({ email: "test@example.com" });
-  console.log("🔍 User found in DB:", found);
-
-  await mongoose.disconnect();
+  console.log("✅ Admin user created:", user);
+  process.exit();
 }
 
-run().catch(console.error);
+run();
+

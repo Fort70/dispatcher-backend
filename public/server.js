@@ -1,8 +1,16 @@
 // ✅ Load environment variables BEFORE anything else
 require("dotenv").config({ path: __dirname + "/.env" });
-
 // ✅ Load express and core modules
 const express = require("express");
+const mongoose = require("mongoose");
+
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => console.log("✅ MongoDB connected"))
+.catch((err) => console.error("❌ MongoDB connection failed:", err.message));
+
 const cors = require("cors");
 const helmet = require("helmet");
 const mongoSanitize = require("mongo-sanitize");
@@ -11,19 +19,20 @@ const path = require("path");
 
 // ✅ Load config & middleware
 const connectDB = require("./config/db");
-const comboRoutes = require("./routes/combo");
-const userRoutes = require("./routes/user");
+const comboRoutes = require("./routes/combo");  // corrected path  // corrected path
+const userRoutes = require("../routes/user");
 const adminRoutes = require("./routes/admin");
 const { authenticateToken, verifyAdminApiKey } = require("./middleware/authMiddleware");
 const updatePassword = require('./utils/updatePassword');
-const passwordResetRoutes = require("./routes/passwordReset");
-const { loginLimiter, resetLimiter, getKey } = require("./middleware/rateLimiter");
+const passwordResetRoutes = require("../routes/passwordReset");
+const { resetLimiter } = require('../middleware/rateLimiter');
 
-// Initialize Express
+// ✅ Connect to MongoDB
+connectDB();
+
 const app = express();
 
 // ✅ Serve static files
-console.log("🗂️  Serving static from:", path.join(__dirname, "public"));
 app.use(express.static(path.join(__dirname, "public")));
 
 // ✅ Setup CORS
@@ -71,27 +80,24 @@ app.use((req, res, next) => {
 });
 
 // ✅ Routes registration
-
-// Admin routes
 app.use("/admin", adminRoutes);
-
-// User routes (login is unprotected inside router; everything else protected)
 app.use("/api/users", userRoutes);
+app.use("/api/combos", authenticateToken, comboRoutes);
+// rate-limit both request‐code and reset‐password calls
+app.use('/api/password-reset', resetLimiter, passwordResetRoutes);
+//app.use('/api/reset', require('./routes/passwordReset'));
+//app.use("/api/update-password", require("./utils/updatePassword"));
 
-// Combo routes (protected)
-app.use("/api/combo", authenticateToken, comboRoutes);
 
-// Password-reset (rate-limited)
-app.use("/api/password-reset", resetLimiter, passwordResetRoutes);
-
-// Stripe Checkout session
+// ✅ Stripe Checkout route
 app.post("/api/create-checkout-session", authenticateToken, async (req, res) => {
   const { plan } = req.body;
   const priceMap = {
     starter: "prod_SRiYs9GYhEZ6PE",
-    pro:     "prod_SRiZMGjirozmLn",
-    elite:   "prod_SRidKbTQuxGmU1"
+    pro: "prod_SRiZMGjirozmLn",
+    elite: "prod_SRidKbTQuxGmU1"
   };
+
   const priceId = priceMap[plan];
   if (!priceId) return res.status(400).json({ error: "Invalid plan selected" });
 
@@ -102,7 +108,7 @@ app.post("/api/create-checkout-session", authenticateToken, async (req, res) => 
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: { trial_period_days: 7 },
       success_url: `${process.env.YOUR_DOMAIN}/dispatcher.html?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url:  `${process.env.YOUR_DOMAIN}/subscription.html`
+      cancel_url: `${process.env.YOUR_DOMAIN}/subscription.html`
     });
     return res.json({ url: session.url });
   } catch (err) {
@@ -111,7 +117,7 @@ app.post("/api/create-checkout-session", authenticateToken, async (req, res) => 
   }
 });
 
-// Stripe webhook for payment events
+// ✅ Stripe webhooks
 app.post(
   "/webhook/payment",
   bodyParser.raw({ type: "application/json" }),
@@ -127,25 +133,18 @@ app.post(
     } catch (err) {
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
-    // handle events …
+    // handle events ...
     res.status(200).send("OK");
   }
 );
 
-// Static front-end fallbacks
-//app.get("/", (req, res) => res.redirect("/login.html"));
-app.get("/payment", (req, res) =>
-  res.sendFile(path.join(__dirname, "public/payment.html"))
-);
+// ✅ Default redirect
+app.get("/", (req, res) => res.redirect("/login.html"));
 
-// ✅ Bootstrap the server **after** MongoDB is connected
-(async () => {
-  try {
-    await connectDB();
-    console.log(`🚀 Server running on port ${process.env.PORT || 5000}`);
-    app.listen(process.env.PORT || 5000, "0.0.0.0");
-  } catch (err) {
-    console.error("❌ Server failed to start:", err);
-    process.exit(1);
-  }
-})();
+app.get('/payment', (req, res) => {
+  res.sendFile(__dirname + '/public/payment.html');
+});
+
+// ✅ Start server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`));

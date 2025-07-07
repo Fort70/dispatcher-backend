@@ -1,0 +1,16 @@
+[0;1;31m×[0m mongod.service - MongoDB Database Server
+     Loaded: loaded (]8;;file://speclode-api-prod/usr/lib/systemd/system/mongod.service/usr/lib/systemd/system/mongod.service]8;;; [0;1;32menabled[0m; preset: [0;1;32menabled[0m)
+     Active: [0;1;31mfailed[0m (Result: signal) since Thu 2025-06-26 02:04:07 UTC; 32min ago
+   Duration: 19h 5min 31.394s
+ Invocation: a49e616231924aaa84e38bb08f5b4120
+       Docs: ]8;;https://docs.mongodb.org/manualhttps://docs.mongodb.org/manual]8;;
+    Process: 46844 ExecStart=/usr/bin/mongod --config /etc/mongod.conf [0;1;31m(code=killed, signal=KILL)[0m
+   Main PID: 46844 (code=killed, signal=KILL)
+   Mem peak: 209.2M
+        CPU: 6min 4.390s
+
+Jun 25 06:58:36 speclode-api-prod systemd[1]: Started mongod.service - MongoDB Database Server.
+Jun 25 06:58:36 speclode-api-prod mongod[46844]: {"t":{"$date":"2025-06-25T06:58:36.216Z"},"s":"I",  "c":"CONTROL",  "id":7484500, "ctx":"-","msg":"Environment variable MONGODB_CONFIG_OVERRIDE_NOFORK == 1, overriding \"processManagement.fork\" to false"}
+Jun 26 02:04:07 speclode-api-prod systemd[1]: [0;1;38:5:185m[0;1;39m[0;1;38:5:185mmongod.service: Main process exited, code=killed, status=9/KILL[0m
+Jun 26 02:04:07 speclode-api-prod systemd[1]: [0;1;38:5:185m[0;1;39m[0;1;38:5:185mmongod.service: Failed with result 'signal'.[0m
+Jun 26 02:04:07 speclode-api-prod systemd[1]: mongod.service: Consumed 6min 4.390s CPU time, 209.2M memory peak.

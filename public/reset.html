@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reset Password - SpecLode</title>
+  <link href="https://fonts.googleapis.com/css2?family=Protest+Revolution&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #111;
+      color: white;
+      font-family: 'Protest Revolution', cursive;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 50px;
+    }
+    h1 {
+      color: cyan;
+      font-size: 4rem;
+      margin-bottom: 2rem;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      background-color: #222;
+      padding: 2.5rem;
+      border-radius: 1.25rem;
+      box-shadow: 0 0 1.25rem lime;
+      width: 90%;
+      max-width: 500px;
+    }
+    input {
+      padding: 1rem;
+      font-size: 1.5rem;
+      border: none;
+      border-radius: 0.625rem;
+      background-color: #333;
+      color: white;
+    }
+    input:focus, button:focus {
+      outline: 3px solid cyan;
+    }
+    button {
+      padding: 1rem;
+      font-size: 1.5rem;
+      background-color: lime;
+      color: black;
+      border: none;
+      border-radius: 0.625rem;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    label {
+      font-size: 1rem;
+      color: #ccc;
+    }
+    .message {
+      font-size: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    p.nav {
+      margin-top: 1.5rem;
+      font-size: 1rem;
+    }
+    p.nav a {
+      color: cyan;
+      text-decoration: none;
+    }
+    p.nav a:hover {
+      text-decoration: underline;
+    }
+    #resendBtn {
+      background-color: cyan;
+      color: black;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Reset Password</h1>
+  <form id="resetForm" novalidate>
+    <input 
+      type="email" 
+      id="email" 
+      placeholder="Enter Your Email" 
+      required 
+    />
+    <input 
+      type="text" 
+      id="code" 
+      placeholder="Enter 6-Digit Code" 
+      pattern="\d{6}" 
+      title="6-digit code" 
+      required 
+    />
+    <input 
+      type="password" 
+      id="newPassword" 
+      placeholder="Enter New Password" 
+      minlength="8" 
+      required 
+    />
+    <label>
+      <input type="checkbox" id="showPw" /> Show password
+    </label>
+    <button type="submit" id="submitBtn">Update Password</button>
+  </form>
+  <div class="message" id="message"></div>
+  <button id="resendBtn">Resend Code</button>
+  <p class="nav">
+    Remembered your password? 
+    <a href="login.html">Log in</a>
+  </p>
+
+  <script>
+    const form = document.getElementById('resetForm');
+    const emailInput = document.getElementById('email');
+    const codeInput = document.getElementById('code');
+    const newPasswordInput = document.getElementById('newPassword');
+    const showPw = document.getElementById('showPw');
+    const submitBtn = document.getElementById('submitBtn');
+    const resendBtn = document.getElementById('resendBtn');
+    const message = document.getElementById('message');
+
+    // Toggle password visibility
+    showPw.addEventListener('change', () => {
+      newPasswordInput.type = showPw.checked ? 'text' : 'password';
+    });
+
+    // Enable submit only when all fields are valid
+    function updateButtonState() {
+      submitBtn.disabled = !( 
+        emailInput.checkValidity() &&
+        codeInput.checkValidity() &&
+        newPasswordInput.checkValidity()
+      );
+      resendBtn.disabled = !emailInput.checkValidity();
+    }
+    emailInput.addEventListener('input', updateButtonState);
+    codeInput.addEventListener('input', updateButtonState);
+    newPasswordInput.addEventListener('input', updateButtonState);
+    updateButtonState();
+
+    // Handle form submission
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      message.textContent = '';
+      submitBtn.disabled = true;
+
+      const payload = {
+        email: emailInput.value,
+        code: codeInput.value,
+        newPassword: newPasswordInput.value
+      };
+
+      try {
+        const res = await fetch('/api/password-reset/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        message.textContent = data.message;
+        message.style.color = res.ok ? 'lime' : 'red';
+      } catch (err) {
+        message.textContent = 'Something went wrong. Please try again.';
+        message.style.color = 'red';
+      } finally {
+        updateButtonState();
+      }
+    });
+
+    // Handle resending code
+    resendBtn.addEventListener('click', async () => {
+      message.textContent = '';
+      resendBtn.disabled = true;
+      try {
+        const res = await fetch('/api/password-reset/request-password-reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: emailInput.value })
+        });
+        const data = await res.json();
+        message.textContent = data.message;
+        message.style.color = res.ok ? 'lime' : 'red';
+      } catch (err) {
+        message.textContent = 'Error resending code.';
+        message.style.color = 'red';
+      } finally {
+        updateButtonState();
+      }
+    });
+  </script>
+</body>
+</html>

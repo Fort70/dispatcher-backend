@@ -1,34 +1,54 @@
 // ✅ Load Required Modules
+const mongoose = require("mongoose");
+
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
+router.get("/admin/debug-password", async (req, res) => {
+  const testPassword = "Test123!";
+  const hashFromDB = "$2b$10$rAKm9Nk5o/Po9lp0dy6Jae/jfVSPvVL/MZfw3HsentclsKsXv9Zju"; // use your exact stored hash
+
+  try {
+    const match = await bcrypt.compare(testPassword, hashFromDB);
+    res.json({ match });
+  } catch (err) {
+    res.status(500).json({ message: "Error comparing passwords", error: err.message });
+  }
+});
+
+
 // ✅ Load Middleware
 const { authenticateToken, verifyAdminApiKey } = require("../middleware/authMiddleware");
 const adminOnly = require("../middleware/adminOnly");
-const loginLimiter = require("../middleware/rateLimiter");
+const { loginLimiter } = require("../middleware/rateLimiter");
 
+console.log("🔍 loginLimiter type:", typeof loginLimiter, loginLimiter);
 
 // ✅ Admin Login (NO verifyAdminApiKey here — allow login to proceed with correct credentials)
 router.post("/login", loginLimiter, async (req, res) => {
+	console.log("🔌 Mongoose readyState before findOne:", mongoose.connection.readyState);
+	console.log("🔥 Login request received:", req.body);
+
   try {
     const { email, password } = req.body;
     const normalizedEmail = email.trim().toLowerCase();
-    console.log("➡️ Login attempt for:", normalizedEmail);
 
     if (!normalizedEmail || !password) {
       return res.status(400).json({ message: "Email and password required" });
     }
 
-    const user = await User.findOne({ email: normalizedEmail });
+    const user = await User.findOne({ email: normalizedEmail }).select('+password');
+
     if (!user || user.role !== "admin") {
       return res.status(401).json({ message: "Unauthorized access" });
     }
 
-    console.log("🔑 Raw password from login form:", password);
-    console.log("🔐 Hashed password from DB:", user.password);
+    if (!user.password) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -50,11 +70,11 @@ router.post("/login", loginLimiter, async (req, res) => {
         role: user.role
       }
     });
-  } catch (err) {
-    console.error("🔥 Login error:", err);
-    res.status(500).json({ message: "Server error" });
+  } catch (error) {
+    return res.status(500).json({ message: "Server error", error: error.message });
   }
 });
+
 
 // ✅ Promote User to Admin
 router.post("/promote/:email", verifyAdminApiKey, authenticateToken, adminOnly, async (req, res) => {
@@ -125,7 +145,7 @@ router.post("/reset-password", verifyAdminApiKey, authenticateToken, adminOnly, 
   }
 
   try {
-    const user = await User.findOne({ email: normalizedEmail });
+    const user = await User.findOne({ email: normalizedEmail }).select('+password');
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
@@ -140,6 +160,3 @@ router.post("/reset-password", verifyAdminApiKey, authenticateToken, adminOnly, 
 });
 
 module.exports = router;
-
-
-
